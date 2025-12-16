@@ -118,12 +118,8 @@ class ApiService {
   }
 
   // Torrent endpoints
-  Future<List<dynamic>> searchTorrents(String query, {String? category}) async {
-    final params = <String, String>{
-      'q': query,
-      if (category != null) 'category': category,
-    };
-    final data = await _get('/api/torrents/search', params);
+  Future<List<dynamic>> searchTorrents(String query) async {
+    final data = await _get('/api/torrents/search', {'q': query});
     return data['results'] as List<dynamic>;
   }
 

@@ -4,13 +4,11 @@ import '../services/api_service.dart';
 
 class TorrentSearchDialog extends StatefulWidget {
   final String initialQuery;
-  final String? category;
   final String? expectedYear;
 
   const TorrentSearchDialog({
     super.key,
     required this.initialQuery,
-    this.category,
     this.expectedYear,
   });
 
@@ -58,10 +56,7 @@ class _TorrentSearchDialogState extends State<TorrentSearchDialog> {
 
     try {
       final api = context.read<ApiService>();
-      final results = await api.searchTorrents(
-        _searchController.text,
-        category: widget.category,
-      );
+      final results = await api.searchTorrents(_searchController.text);
 
       // Detect years in results
       final years = <String>{};

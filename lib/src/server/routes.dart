@@ -360,26 +360,21 @@ class ApiRoutes {
     }
 
     final query = request.url.queryParameters['q'];
-    final category = request.url.queryParameters['category']; // 'movie' or 'tv'
+    // Category parameter no longer used - many indexers don't categorize
+    // properly, which causes relevant results to be missed
 
     if (query == null || query.isEmpty) {
       return _jsonError(400, 'Query parameter q required');
     }
 
-    List<TorrentResult> results;
-    if (category == 'movie') {
-      results = await jackett!.searchMovies(query);
-    } else if (category == 'tv') {
-      results = await jackett!.searchTv(query);
-    } else {
-      results = await jackett!.search(query);
-    }
+    // Search without category restriction to get maximum results
+    final results = await jackett!.search(query);
 
     // Sort by seeders descending
     results.sort((a, b) => b.seeders.compareTo(a.seeders));
 
     return _jsonOk({
-      'results': results.take(50).map((r) => r.toJson()).toList(),
+      'results': results.take(100).map((r) => r.toJson()).toList(),
     });
   }
 
