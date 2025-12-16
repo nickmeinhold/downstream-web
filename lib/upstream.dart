@@ -1,5 +1,5 @@
-/// Plex - Streaming content discovery CLI
-library plex;
+/// Upstream - Streaming content discovery CLI
+library upstream;
 
 export 'src/tmdb_client.dart';
 export 'src/providers.dart';

@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:args/command_runner.dart';
-import 'package:plex/plex.dart';
+import 'package:upstream/upstream.dart';
 
 void main(List<String> arguments) async {
   final apiKey = Platform.environment['TMDB_API_KEY'];
@@ -9,7 +9,7 @@ void main(List<String> arguments) async {
   final watchHistory = SingleUserWatchHistory(watchHistoryStore);
 
   final runner = CommandRunner<void>(
-    'plex',
+    'upstream',
     'Streaming content discovery CLI - find what\'s new on your favorite services.',
   )
     ..addCommand(ProvidersCommand())

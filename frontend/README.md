@@ -1,4 +1,4 @@
-# plex_frontend
+# upstream_frontend
 
 A new Flutter project.
 

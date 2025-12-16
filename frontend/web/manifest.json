@@ -1,6 +1,6 @@
 {
-    "name": "plex_frontend",
-    "short_name": "plex_frontend",
+    "name": "upstream_frontend",
+    "short_name": "upstream_frontend",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

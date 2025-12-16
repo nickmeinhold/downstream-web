@@ -1,4 +1,4 @@
-# Plex
+# Upstream
 
 **What's new on streaming? Download it with one click.**
 
@@ -6,7 +6,7 @@ A self-hosted web app for discovering new content across Netflix, Disney+, Apple
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  PLEX                                         nick ▼   ⬇ 2     │
+│  UPSTREAM                                     nick ▼   ⬇ 2     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │
@@ -119,11 +119,11 @@ Prefer the terminal? The original CLI still works:
 ```bash
 dart pub global activate --source path .
 
-plex new                        # New releases (last 30 days)
-plex new -p netflix -p disney   # Filter by provider
-plex trending                   # What's hot this week
-plex search "severance"         # Find something specific
-plex where "The Bear"           # Where is it streaming?
+upstream new                        # New releases (last 30 days)
+upstream new -p netflix -p disney   # Filter by provider
+upstream trending                   # What's hot this week
+upstream search "severance"         # Find something specific
+upstream where "The Bear"           # Where is it streaming?
 ```
 
 ---
@@ -188,8 +188,8 @@ DELETE /api/torrents/{id}?deleteData=true
 All data is stored locally:
 
 ```text
-~/.plex_users.json     # Accounts (passwords are hashed)
-~/.plex_watched.json   # Per-user watch history
+~/.upstream_users.json     # Accounts (passwords are hashed)
+~/.upstream_watched.json   # Per-user watch history
 ```
 
 ---
