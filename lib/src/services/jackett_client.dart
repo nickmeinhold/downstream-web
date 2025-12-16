@@ -4,11 +4,32 @@ import 'package:http/http.dart' as http;
 class JackettClient {
   final String baseUrl;
   final String apiKey;
+  String? _sessionCookie;
 
   JackettClient({
     this.baseUrl = 'http://localhost:9117',
     required this.apiKey,
   });
+
+  /// Initialize session by hitting the homepage to get a session cookie
+  Future<void> _ensureSession() async {
+    if (_sessionCookie != null) return;
+
+    final response = await http.get(Uri.parse('$baseUrl/UI/Login'));
+    final setCookie = response.headers['set-cookie'];
+    if (setCookie != null) {
+      // Extract just the cookie name=value part
+      _sessionCookie = setCookie.split(';').first;
+    }
+  }
+
+  /// Make a GET request with session cookie
+  Future<http.Response> _get(Uri uri) async {
+    await _ensureSession();
+    return http.get(uri, headers: {
+      if (_sessionCookie != null) 'Cookie': _sessionCookie!,
+    });
+  }
 
   /// Search all configured indexers for torrents
   Future<List<TorrentResult>> search(String query, {String? category}) async {
@@ -21,7 +42,7 @@ class JackettClient {
     final uri = Uri.parse('$baseUrl/api/v2.0/indexers/all/results')
         .replace(queryParameters: params);
 
-    final response = await http.get(uri);
+    final response = await _get(uri);
 
     if (response.statusCode != 200) {
       throw JackettException('Search failed: ${response.statusCode}');
@@ -50,7 +71,7 @@ class JackettClient {
     final uri = Uri.parse('$baseUrl/api/v2.0/indexers')
         .replace(queryParameters: {'apikey': apiKey});
 
-    final response = await http.get(uri);
+    final response = await _get(uri);
 
     if (response.statusCode != 200) {
       throw JackettException('Failed to get indexers: ${response.statusCode}');
