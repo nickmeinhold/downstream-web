@@ -104,6 +104,16 @@ class ApiService {
     return data['providers'] as List<dynamic>;
   }
 
+  /// Get streaming providers (Netflix, Disney+, etc.) for a specific title
+  Future<List<String>> getWatchProviders(String mediaType, int id) async {
+    try {
+      final data = await _get('/api/providers/$mediaType/$id');
+      return (data['providers'] as List<dynamic>).cast<String>();
+    } catch (e) {
+      return [];
+    }
+  }
+
   // Ratings (IMDB, Rotten Tomatoes, Metacritic)
   Future<Map<String, dynamic>?> getRatings(String mediaType, int id) async {
     try {

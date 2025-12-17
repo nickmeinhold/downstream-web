@@ -23,12 +23,36 @@ class _MediaDetailDialogState extends State<MediaDetailDialog> {
   bool _isUpdating = false;
   Map<String, dynamic>? _ratings;
   bool _loadingRatings = true;
+  List<String> _providers = [];
+  bool _loadingProviders = true;
 
   @override
   void initState() {
     super.initState();
     _watched = widget.item['watched'] as bool? ?? false;
+    // Check if providers already exist in the item data
+    final existingProviders = widget.item['providers'] as List<dynamic>? ?? [];
+    if (existingProviders.isNotEmpty) {
+      _providers = existingProviders.cast<String>();
+      _loadingProviders = false;
+    } else {
+      _fetchProviders();
+    }
     _fetchRatings();
+  }
+
+  Future<void> _fetchProviders() async {
+    final api = context.read<ApiService>();
+    final mediaType = widget.item['mediaType'] as String;
+    final id = widget.item['id'] as int;
+
+    final providers = await api.getWatchProviders(mediaType, id);
+    if (mounted) {
+      setState(() {
+        _providers = providers;
+        _loadingProviders = false;
+      });
+    }
   }
 
   Future<void> _fetchRatings() async {
@@ -102,7 +126,6 @@ class _MediaDetailDialogState extends State<MediaDetailDialog> {
     final overview = widget.item['overview'] as String? ?? 'No description available.';
     final posterUrl = widget.item['posterUrl'] as String?;
     final mediaType = widget.item['mediaType'] as String? ?? 'movie';
-    final providers = widget.item['providers'] as List<dynamic>? ?? [];
 
     return Dialog(
       child: ConstrainedBox(
@@ -183,19 +206,32 @@ class _MediaDetailDialogState extends State<MediaDetailDialog> {
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           const Spacer(),
-                          if (providers.isNotEmpty)
+                          if (_loadingProviders)
+                            const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else if (_providers.isNotEmpty)
                             Wrap(
                               spacing: 4,
-                              children: providers
+                              children: _providers
                                   .take(4)
                                   .map((p) => Chip(
                                         label: Text(
-                                          p.toString(),
+                                          p,
                                           style: const TextStyle(fontSize: 10),
                                         ),
                                         visualDensity: VisualDensity.compact,
                                       ))
                                   .toList(),
+                            )
+                          else
+                            Text(
+                              'Not streaming',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                         ],
                       ),

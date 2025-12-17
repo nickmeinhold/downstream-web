@@ -42,6 +42,7 @@ class ApiRoutes {
     router.get('/search', _withAuth(_search));
     router.get('/where', _withAuth(_where));
     router.get('/providers', _getProviders);
+    router.get('/providers/<mediaType>/<id>', _withAuth(_getWatchProviders));
     router.get('/ratings/<mediaType>/<id>', _withAuth(_getRatings));
 
     // Watch history routes
@@ -254,6 +255,23 @@ class ApiRoutes {
               'key': p.key,
             })
         .toList();
+    return _jsonOk({'providers': providers});
+  }
+
+  /// Get streaming providers for a specific movie or TV show
+  Future<Response> _getWatchProviders(Request request, FirebaseUser user) async {
+    final mediaType = request.params['mediaType'];
+    final idStr = request.params['id'];
+    if (mediaType == null || idStr == null) {
+      return _jsonError(400, 'Invalid parameters');
+    }
+
+    final id = int.tryParse(idStr);
+    if (id == null) {
+      return _jsonError(400, 'Invalid ID');
+    }
+
+    final providers = await tmdb.getWatchProviders(id, mediaType);
     return _jsonOk({'providers': providers});
   }
 

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'models.dart';
-import 'providers.dart';
 
 class TmdbClient {
   final String apiKey;
@@ -119,16 +118,17 @@ class TmdbClient {
     final usData = results['US'] as Map<String, dynamic>?;
     if (usData == null) return [];
 
-    final flatrate = usData['flatrate'] as List<dynamic>?;
-    if (flatrate == null) return [];
+    // Include both subscription (flatrate) and free with ads providers
+    final flatrate = usData['flatrate'] as List<dynamic>? ?? [];
+    final ads = usData['ads'] as List<dynamic>? ?? [];
 
-    return flatrate
-        .map((p) {
-          final id = p['provider_id'] as int;
-          return Providers.nameById(id);
-        })
-        .whereType<String>()
-        .toList();
+    final providers = <String>{};
+    for (final p in [...flatrate, ...ads]) {
+      final name = p['provider_name'] as String?;
+      if (name != null) providers.add(name);
+    }
+
+    return providers.toList();
   }
 
   Future<MediaItem> enrichWithProviders(MediaItem item) async {
