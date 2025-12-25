@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/media_grid.dart';
 import '../widgets/media_detail_dialog.dart';
+import '../widgets/queue_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   String? _error;
   final _searchController = TextEditingController();
+  Timer? _queueRefreshTimer;
 
   // Common genres (shared between movies and TV)
   static const _genres = <int, String>{
@@ -52,7 +56,19 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _queueRefreshTimer?.cancel();
     super.dispose();
+  }
+
+  void _updateQueueTimer() {
+    _queueRefreshTimer?.cancel();
+    if (_selectedIndex == 3) {
+      // Auto-refresh Queue tab every 5 seconds
+      _queueRefreshTimer = Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => _loadContent(),
+      );
+    }
   }
 
   Future<void> _loadContent() async {
@@ -87,6 +103,9 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             items = await api.search(_searchController.text);
           }
+          break;
+        case 3: // Queue
+          items = await api.getRequests();
           break;
         default:
           items = [];
@@ -177,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIndex: _selectedIndex,
             onDestinationSelected: (index) {
               setState(() => _selectedIndex = index);
+              _updateQueueTimer();
               _loadContent();
             },
             labelType: NavigationRailLabelType.all,
@@ -195,6 +215,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icon(Icons.search_outlined),
                 selectedIcon: Icon(Icons.search),
                 label: Text('Search'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.download_outlined),
+                selectedIcon: Icon(Icons.download),
+                label: Text('Queue'),
               ),
             ],
           ),
@@ -374,20 +399,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_items.isEmpty) {
+      final (icon, message) = switch (_selectedIndex) {
+        2 => (Icons.search, 'Search for movies and TV shows'),
+        3 => (Icons.download_outlined, 'No items in queue'),
+        _ => (Icons.movie_outlined, 'No content found'),
+      };
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _selectedIndex == 2 ? Icons.search : Icons.movie_outlined,
+              icon,
               size: 48,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
-              _selectedIndex == 2
-                  ? 'Search for movies and TV shows'
-                  : 'No content found',
+              message,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],
@@ -395,6 +423,10 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    // Use QueueList for Queue tab, MediaGrid for others
+    if (_selectedIndex == 3) {
+      return QueueList(items: _items, onRefresh: _loadContent);
+    }
     return MediaGrid(items: _items, onTap: _showMediaDetail);
   }
 }

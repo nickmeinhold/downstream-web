@@ -141,15 +141,33 @@ class FirestoreWatchHistory {
       final name = doc['name'] as String;
       final id = name.split('/').last;
 
+      final posterPath = fields['posterPath']?['stringValue'] as String?;
+
       return {
         'id': id,
-        'tmdbId': int.parse(fields['tmdbId']['integerValue'] as String),
-        'mediaType': fields['mediaType']['stringValue'] as String,
-        'title': fields['title']['stringValue'] as String,
-        'posterPath': fields['posterPath']?['stringValue'] as String?,
-        'requestedBy': fields['requestedBy']['stringValue'] as String,
-        'requestedAt': fields['requestedAt']['timestampValue'] as String,
-        'status': fields['status']['stringValue'] as String,
+        'tmdbId': int.parse(fields['tmdbId']?['integerValue'] as String? ?? '0'),
+        'mediaType': fields['mediaType']?['stringValue'] as String? ?? 'movie',
+        'title': fields['title']?['stringValue'] as String? ?? 'Unknown',
+        'posterPath': posterPath,
+        'posterUrl': posterPath != null
+            ? 'https://image.tmdb.org/t/p/w500$posterPath'
+            : null,
+        'requestedBy': fields['requestedBy']?['stringValue'] as String? ?? '',
+        'requestedAt': fields['requestedAt']?['timestampValue'] as String?,
+        'status': fields['status']?['stringValue'] as String? ?? 'pending',
+        'downloadProgress': double.tryParse(
+            fields['downloadProgress']?['doubleValue']?.toString() ?? ''),
+        'transcodingProgress': double.tryParse(
+            fields['transcodingProgress']?['doubleValue']?.toString() ?? ''),
+        'uploadProgress': double.tryParse(
+            fields['uploadProgress']?['doubleValue']?.toString() ?? ''),
+        'downloadStartedAt':
+            fields['downloadStartedAt']?['timestampValue'] as String?,
+        'transcodingStartedAt':
+            fields['transcodingStartedAt']?['timestampValue'] as String?,
+        'uploadStartedAt':
+            fields['uploadStartedAt']?['timestampValue'] as String?,
+        'errorMessage': fields['errorMessage']?['stringValue'] as String?,
       };
     }).toList();
   }
