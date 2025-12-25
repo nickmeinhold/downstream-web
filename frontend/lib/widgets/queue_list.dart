@@ -176,7 +176,7 @@ class _QueueItem extends StatelessWidget {
                         TextButton.icon(
                           onPressed: () {
                             final mediaType = item['mediaType'] as String? ?? 'movie';
-                            final tmdbId = item['tmdbId'] as int? ?? 0;
+                            final tmdbId = (item['tmdbId'] as num?)?.toInt() ?? 0;
                             onRetry!(mediaType, tmdbId);
                           },
                           icon: const Icon(Icons.refresh, size: 16),
