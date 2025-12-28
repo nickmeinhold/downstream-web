@@ -11,8 +11,8 @@ Downstream is a self-hosted web app for discovering new streaming content. Users
 
 ## Related Projects
 
-**downstream-cli** (`../downstream-cli`) handles the downloading workflow:
-- Polls Firestore every 5 seconds for pending content requests
+**downstream-cli** (https://github.com/nickmeinhold/downstream-cli) handles the downloading workflow:
+- Monitors Firestore via gRPC real-time listener for pending requests
 - Uses Jackett to search for torrents
 - Manages downloads via Transmission
 - Transcodes to HLS and uploads to B2
@@ -27,23 +27,20 @@ Clicks "Request for Download"
          ↓
 Request saved to Firestore (status: pending)
          ↓
-downstream-cli polls Firestore every 5 seconds
+downstream-cli receives update via gRPC stream (instant)
          ↓
 Picks up request, downloads, transcodes, uploads
          ↓
 Updates Firestore status → reflected in web app
 ```
 
-## Request Status Flow
+## Shared Contract
 
-| Status | Set By | Meaning |
-|--------|--------|---------|
-| `pending` | web app | User requested, waiting for CLI |
-| `downloading` | CLI | Torrent added to Transmission |
-| `transcoding` | CLI | Converting to HLS format |
-| `uploading` | CLI | Uploading to B2 storage |
-| `available` | CLI | Ready to stream |
-| `failed` | CLI | Error occurred |
+See [SCHEMA.md](SCHEMA.md) for the Firestore schema shared between this project and downstream-cli.
+
+Status constants are defined in:
+- `server/lib/src/constants.dart`
+- `frontend/lib/constants.dart`
 
 ## Environment Variables
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:googleapis_auth/auth_io.dart';
 
+import '../constants.dart';
 import '../models.dart';
 
 class FirestoreWatchHistory {
@@ -30,14 +31,14 @@ class FirestoreWatchHistory {
   /// Check if item is watched by user
   Future<bool> isWatched(String userId, MediaItem item) async {
     final mediaKey = item.uniqueKey;
-    final docPath = 'users/$userId/watched/$mediaKey';
+    final docPath = '${Collections.users}/$userId/${Collections.watched}/$mediaKey';
     final response = await _client.get(Uri.parse('$_baseUrl/$docPath'));
     return response.statusCode == 200;
   }
 
   /// Get all watched media keys for a user
   Future<Set<String>> getWatchedKeys(String userId) async {
-    final url = '$_baseUrl/users/$userId/watched';
+    final url = '$_baseUrl/${Collections.users}/$userId/${Collections.watched}';
     final response = await _client.get(Uri.parse(url));
 
     if (response.statusCode != 200) return {};
@@ -59,7 +60,7 @@ class FirestoreWatchHistory {
   /// Mark item as watched
   Future<void> markWatched(String userId, String mediaType, int id) async {
     final mediaKey = '${mediaType}_$id';
-    final docPath = 'users/$userId/watched/$mediaKey';
+    final docPath = '${Collections.users}/$userId/${Collections.watched}/$mediaKey';
     final url = '$_baseUrl/$docPath';
 
     await _client.patch(
@@ -80,7 +81,7 @@ class FirestoreWatchHistory {
   /// Unmark item as watched
   Future<void> markUnwatched(String userId, String mediaType, int id) async {
     final mediaKey = '${mediaType}_$id';
-    final docPath = 'users/$userId/watched/$mediaKey';
+    final docPath = '${Collections.users}/$userId/${Collections.watched}/$mediaKey';
     await _client.delete(Uri.parse('$_baseUrl/$docPath'));
   }
 
@@ -102,7 +103,7 @@ class FirestoreWatchHistory {
     String? posterPath,
   }) async {
     final mediaKey = '${mediaType}_$tmdbId';
-    final docPath = 'requests/$mediaKey';
+    final docPath = '${Collections.requests}/$mediaKey';
     final url = '$_baseUrl/$docPath';
 
     await _client.patch(
@@ -120,7 +121,7 @@ class FirestoreWatchHistory {
           'requestedAt': {
             'timestampValue': DateTime.now().toUtc().toIso8601String(),
           },
-          'status': {'stringValue': 'pending'},
+          'status': {'stringValue': RequestStatus.pending},
         },
       }),
     );
@@ -128,7 +129,7 @@ class FirestoreWatchHistory {
 
   /// Get all media requests
   Future<List<Map<String, dynamic>>> getRequests() async {
-    final url = '$_baseUrl/requests';
+    final url = '$_baseUrl/${Collections.requests}';
     final response = await _client.get(Uri.parse(url));
 
     if (response.statusCode != 200) return [];
@@ -154,7 +155,7 @@ class FirestoreWatchHistory {
             : null,
         'requestedBy': fields['requestedBy']?['stringValue'] as String? ?? '',
         'requestedAt': fields['requestedAt']?['timestampValue'] as String?,
-        'status': fields['status']?['stringValue'] as String? ?? 'pending',
+        'status': fields['status']?['stringValue'] as String? ?? RequestStatus.pending,
         'downloadProgress': double.tryParse(
             fields['downloadProgress']?['doubleValue']?.toString() ?? ''),
         'transcodingProgress': double.tryParse(
@@ -174,7 +175,7 @@ class FirestoreWatchHistory {
 
   /// Get all requested media keys
   Future<Set<String>> getRequestedKeys() async {
-    final url = '$_baseUrl/requests';
+    final url = '$_baseUrl/${Collections.requests}';
     final response = await _client.get(Uri.parse(url));
 
     if (response.statusCode != 200) return {};
@@ -190,7 +191,7 @@ class FirestoreWatchHistory {
   /// Check if a media item has already been requested
   Future<bool> isRequested(String mediaType, int tmdbId) async {
     final mediaKey = '${mediaType}_$tmdbId';
-    final docPath = 'requests/$mediaKey';
+    final docPath = '${Collections.requests}/$mediaKey';
     final response = await _client.get(Uri.parse('$_baseUrl/$docPath'));
     return response.statusCode == 200;
   }
@@ -198,14 +199,14 @@ class FirestoreWatchHistory {
   /// Delete a request
   Future<void> deleteRequest(String mediaType, int tmdbId) async {
     final mediaKey = '${mediaType}_$tmdbId';
-    final docPath = 'requests/$mediaKey';
+    final docPath = '${Collections.requests}/$mediaKey';
     await _client.delete(Uri.parse('$_baseUrl/$docPath'));
   }
 
   /// Reset a failed request back to pending
   Future<void> resetRequest(String mediaType, int tmdbId) async {
     final mediaKey = '${mediaType}_$tmdbId';
-    final docPath = 'requests/$mediaKey';
+    final docPath = '${Collections.requests}/$mediaKey';
     final url = '$_baseUrl/$docPath?updateMask.fieldPaths=status&updateMask.fieldPaths=errorMessage';
 
     await _client.patch(
@@ -213,7 +214,7 @@ class FirestoreWatchHistory {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'fields': {
-          'status': {'stringValue': 'pending'},
+          'status': {'stringValue': RequestStatus.pending},
           'errorMessage': {'nullValue': null},
         },
       }),

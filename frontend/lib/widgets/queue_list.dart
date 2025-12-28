@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../constants.dart';
+
 class QueueList extends StatelessWidget {
   final List<dynamic> items;
   final VoidCallback onRefresh;
@@ -37,7 +39,7 @@ class _QueueItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = item['title'] as String? ?? 'Unknown';
     final mediaType = (item['mediaType'] as String? ?? 'movie').toUpperCase();
-    final status = item['status'] as String? ?? 'pending';
+    final status = item['status'] as String? ?? RequestStatus.pending;
     final posterUrl = item['posterUrl'] as String?;
     // final requestedBy = item['requestedBy'] as String? ?? '';
     final requestedAt = item['requestedAt'] as String?;
@@ -123,9 +125,9 @@ class _QueueItem extends StatelessWidget {
                   _ProgressRow(
                     label: 'Download',
                     progress: downloadProgress,
-                    isActive: status == 'downloading',
-                    isComplete: _isPhaseComplete(status, 'downloading'),
-                    isFailed: status == 'failed' && downloadProgress < 1.0,
+                    isActive: status == RequestStatus.downloading,
+                    isComplete: _isPhaseComplete(status, RequestStatus.downloading),
+                    isFailed: status == RequestStatus.failed && downloadProgress < 1.0,
                     startedAt: downloadStartedAt,
                     color: Colors.blue,
                   ),
@@ -133,9 +135,9 @@ class _QueueItem extends StatelessWidget {
                   _ProgressRow(
                     label: 'Transcode',
                     progress: transcodingProgress,
-                    isActive: status == 'transcoding',
-                    isComplete: _isPhaseComplete(status, 'transcoding'),
-                    isFailed: status == 'failed' && downloadProgress >= 1.0 && transcodingProgress < 1.0,
+                    isActive: status == RequestStatus.transcoding,
+                    isComplete: _isPhaseComplete(status, RequestStatus.transcoding),
+                    isFailed: status == RequestStatus.failed && downloadProgress >= 1.0 && transcodingProgress < 1.0,
                     startedAt: transcodingStartedAt,
                     color: Colors.orange,
                   ),
@@ -143,9 +145,9 @@ class _QueueItem extends StatelessWidget {
                   _ProgressRow(
                     label: 'Upload',
                     progress: uploadProgress,
-                    isActive: status == 'uploading',
-                    isComplete: status == 'available',
-                    isFailed: status == 'failed' && transcodingProgress >= 1.0,
+                    isActive: status == RequestStatus.uploading,
+                    isComplete: status == RequestStatus.available,
+                    isFailed: status == RequestStatus.failed && transcodingProgress >= 1.0,
                     startedAt: uploadStartedAt,
                     color: Colors.green,
                   ),
@@ -172,7 +174,7 @@ class _QueueItem extends StatelessWidget {
                               ),
                         ),
                       ),
-                      if (status == 'failed' && onRetry != null)
+                      if (status == RequestStatus.failed && onRetry != null)
                         TextButton.icon(
                           onPressed: () {
                             final mediaType = item['mediaType'] as String? ?? 'movie';
@@ -197,9 +199,8 @@ class _QueueItem extends StatelessWidget {
   }
 
   bool _isPhaseComplete(String status, String phase) {
-    const phaseOrder = ['pending', 'downloading', 'transcoding', 'uploading', 'available'];
-    final statusIndex = phaseOrder.indexOf(status);
-    final phaseIndex = phaseOrder.indexOf(phase);
+    final statusIndex = RequestStatus.phaseOrder.indexOf(status);
+    final phaseIndex = RequestStatus.phaseOrder.indexOf(phase);
     return statusIndex > phaseIndex;
   }
 
@@ -231,12 +232,12 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon, label) = switch (status) {
-      'pending' => (Colors.grey, Icons.hourglass_empty, 'Pending'),
-      'downloading' => (Colors.blue, Icons.download, 'Downloading'),
-      'transcoding' => (Colors.orange, Icons.transform, 'Transcoding'),
-      'uploading' => (Colors.green, Icons.cloud_upload, 'Uploading'),
-      'available' => (Colors.teal, Icons.check_circle, 'Available'),
-      'failed' => (Colors.red, Icons.error, 'Failed'),
+      RequestStatus.pending => (Colors.grey, Icons.hourglass_empty, 'Pending'),
+      RequestStatus.downloading => (Colors.blue, Icons.download, 'Downloading'),
+      RequestStatus.transcoding => (Colors.orange, Icons.transform, 'Transcoding'),
+      RequestStatus.uploading => (Colors.green, Icons.cloud_upload, 'Uploading'),
+      RequestStatus.available => (Colors.teal, Icons.check_circle, 'Available'),
+      RequestStatus.failed => (Colors.red, Icons.error, 'Failed'),
       _ => (Colors.grey, Icons.help, status),
     };
 
