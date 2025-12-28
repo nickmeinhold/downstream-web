@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                               height: 24,
                               width: 24,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   const Icon(Icons.login),
                             ),
                             const SizedBox(width: 12),

@@ -70,11 +70,11 @@ class _QueueItem extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: posterUrl,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
+                        placeholder: (_, _) => Container(
                           color: Colors.grey[800],
                           child: const Icon(Icons.movie, size: 32),
                         ),
-                        errorWidget: (_, __, ___) => Container(
+                        errorWidget: (_, _, _) => Container(
                           color: Colors.grey[800],
                           child: const Icon(Icons.movie, size: 32),
                         ),

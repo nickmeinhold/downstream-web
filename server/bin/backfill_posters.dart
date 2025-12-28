@@ -33,7 +33,6 @@ void main() async {
   final requests = await firestore.projects.databases.documents.listDocuments(parent, 'requests');
 
   for (final doc in requests.documents ?? []) {
-    final docId = doc.name!.split('/').last;
     final fields = doc.fields ?? {};
     final title = fields['title']?.stringValue;
     final posterPath = fields['posterPath']?.stringValue;

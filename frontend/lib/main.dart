@@ -27,7 +27,7 @@ class DownstreamApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ProxyProvider<AuthService, ApiService>(
-          update: (_, auth, __) => ApiService(auth),
+          update: (_, auth, _) => ApiService(auth),
         ),
       ],
       child: MaterialApp(
