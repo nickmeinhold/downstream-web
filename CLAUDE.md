@@ -62,3 +62,7 @@ dart run bin/server.dart
 cd frontend
 flutter run -d chrome
 ```
+
+## Workflow
+
+Before committing, run the Dart analyzer on both frontend and server using the MCP tool.
