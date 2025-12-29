@@ -7,12 +7,14 @@ class QueueList extends StatelessWidget {
   final List<dynamic> items;
   final VoidCallback onRefresh;
   final Future<void> Function(String mediaType, int id)? onRetry;
+  final void Function(String streamUrl, String title)? onPlay;
 
   const QueueList({
     super.key,
     required this.items,
     required this.onRefresh,
     this.onRetry,
+    this.onPlay,
   });
 
   @override
@@ -24,6 +26,7 @@ class QueueList extends StatelessWidget {
       itemBuilder: (context, index) => _QueueItem(
         item: items[index],
         onRetry: onRetry,
+        onPlay: onPlay,
       ),
     );
   }
@@ -32,8 +35,21 @@ class QueueList extends StatelessWidget {
 class _QueueItem extends StatelessWidget {
   final Map<String, dynamic> item;
   final Future<void> Function(String mediaType, int id)? onRetry;
+  final void Function(String streamUrl, String title)? onPlay;
 
-  const _QueueItem({required this.item, this.onRetry});
+  const _QueueItem({required this.item, this.onRetry, this.onPlay});
+
+  /// Constructs the HLS stream URL from the storagePath
+  String? _getStreamUrl() {
+    final storagePath = item['storagePath'] as String?;
+    if (storagePath == null || storagePath.isEmpty) return null;
+    if (storagePath.startsWith('local:')) return null;
+
+    // Parse the URL and insert /master.m3u8 before any query params
+    final uri = Uri.parse(storagePath);
+    final streamPath = '${uri.path}/master.m3u8';
+    return uri.replace(path: streamPath).toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,6 +190,21 @@ class _QueueItem extends StatelessWidget {
                               ),
                         ),
                       ),
+                      if (status == RequestStatus.available && onPlay != null)
+                        FilledButton.icon(
+                          onPressed: () {
+                            final streamUrl = _getStreamUrl();
+                            final title = item['title'] as String? ?? 'Unknown';
+                            if (streamUrl != null) {
+                              onPlay!(streamUrl, title);
+                            }
+                          },
+                          icon: const Icon(Icons.play_arrow, size: 18),
+                          label: const Text('Play'),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                        ),
                       if (status == RequestStatus.failed && onRetry != null)
                         TextButton.icon(
                           onPressed: () {

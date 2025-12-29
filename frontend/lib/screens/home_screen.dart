@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../widgets/media_grid.dart';
 import '../widgets/media_detail_dialog.dart';
 import '../widgets/queue_list.dart';
+import '../widgets/hls_video_player.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -166,6 +167,17 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     }
+  }
+
+  void _playVideo(String streamUrl, String title) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => HlsVideoPlayer(
+          streamUrl: streamUrl,
+          onClose: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -464,6 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
         items: _items,
         onRefresh: _loadContent,
         onRetry: _retryRequest,
+        onPlay: _playVideo,
       );
     }
     return MediaGrid(items: _items, onTap: _showMediaDetail);

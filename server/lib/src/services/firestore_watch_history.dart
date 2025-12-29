@@ -169,6 +169,7 @@ class FirestoreWatchHistory {
         'uploadStartedAt':
             fields['uploadStartedAt']?['timestampValue'] as String?,
         'errorMessage': fields['errorMessage']?['stringValue'] as String?,
+        'storagePath': fields['storagePath']?['stringValue'] as String?,
       };
     }).toList();
   }
