@@ -2,30 +2,53 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'config.dart';
 import 'services/api_service.dart';
 import 'services/auth_service.dart';
+import 'services/b2_service.dart';
+import 'services/omdb_service.dart';
+import 'services/video_service.dart';
+import 'services/platform_service.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/tv_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  // Skip Firebase on TV platforms (auth won't work)
+  final isTv = PlatformService.isTvPlatform;
+  if (!isTv) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+
+  // Initialize services
+  final omdbService = OmdbService(apiKey: AppConfig.omdbApiKey);
+  final b2Service = B2Service(
+    manifestUrl: AppConfig.manifestUrl,
+    omdbService: omdbService,
   );
 
-  runApp(const DownstreamApp());
+  runApp(DownstreamApp(b2Service: b2Service, isTvMode: isTv));
 }
 
 class DownstreamApp extends StatelessWidget {
-  const DownstreamApp({super.key});
+  final B2Service b2Service;
+  final bool isTvMode;
+
+  const DownstreamApp({
+    super.key,
+    required this.b2Service,
+    this.isTvMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => VideoService(b2Service)),
         ProxyProvider<AuthService, ApiService>(
           update: (_, auth, _) => ApiService(auth),
         ),
@@ -40,7 +63,8 @@ class DownstreamApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        home: const AuthWrapper(),
+        // Skip auth on TV platforms - Firebase/Google Sign-In won't work
+        home: isTvMode ? const TvHomeScreen() : const AuthWrapper(),
       ),
     );
   }
@@ -72,7 +96,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
           );
         }
         if (auth.isAuthenticated) {
-          return const HomeScreen();
+          return const TvHomeScreen();
         }
         return const LoginScreen();
       },

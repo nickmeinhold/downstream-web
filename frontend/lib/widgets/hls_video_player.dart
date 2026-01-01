@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:js_interop';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
 
 /// JS interop for hls.js
@@ -37,9 +39,19 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
 
+  // TV remote/keyboard support
+  final FocusNode _focusNode = FocusNode();
+  bool _showControls = true;
+  Timer? _hideControlsTimer;
+
   @override
   void initState() {
     super.initState();
+    _startHideControlsTimer();
+    // Request focus for keyboard events
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
   }
 
   void _onElementCreated(Object element) {
@@ -148,7 +160,67 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
   @override
   void dispose() {
     _hls?.destroy();
+    _focusNode.dispose();
+    _hideControlsTimer?.cancel();
     super.dispose();
+  }
+
+  void _startHideControlsTimer() {
+    _hideControlsTimer?.cancel();
+    _hideControlsTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && _isPlaying) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  void _showControlsTemporarily() {
+    setState(() => _showControls = true);
+    _startHideControlsTimer();
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    // Show controls on any key press
+    _showControlsTemporarily();
+
+    switch (event.logicalKey) {
+      // Play/Pause
+      case LogicalKeyboardKey.space:
+      case LogicalKeyboardKey.enter:
+      case LogicalKeyboardKey.select:
+        _togglePlayPause();
+        return KeyEventResult.handled;
+
+      // Seek backward
+      case LogicalKeyboardKey.arrowLeft:
+        _seekRelative(-10);
+        return KeyEventResult.handled;
+
+      // Seek forward
+      case LogicalKeyboardKey.arrowRight:
+        _seekRelative(10);
+        return KeyEventResult.handled;
+
+      // Exit player
+      case LogicalKeyboardKey.escape:
+      case LogicalKeyboardKey.goBack:
+      case LogicalKeyboardKey.browserBack:
+        _closePlayer();
+        return KeyEventResult.handled;
+
+      default:
+        return KeyEventResult.ignored;
+    }
+  }
+
+  void _closePlayer() {
+    if (widget.onClose != null) {
+      widget.onClose!();
+    } else {
+      Navigator.of(context).pop();
+    }
   }
 
   void _togglePlayPause() {
@@ -182,164 +254,183 @@ class _HlsVideoPlayerState extends State<HlsVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Video container
-          Center(
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: HtmlElementView.fromTagName(
-                tagName: 'video',
-                onElementCreated: _onElementCreated,
-              ),
-            ),
-          ),
-
-          // Loading indicator
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-
-          // Error message
-          if (_error != null)
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.white),
+    return Focus(
+      focusNode: _focusNode,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: MouseRegion(
+          onHover: (_) => _showControlsTemporarily(),
+          child: Stack(
+            children: [
+              // Video container
+              Center(
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: HtmlElementView.fromTagName(
+                    tagName: 'video',
+                    onElementCreated: _onElementCreated,
                   ),
-                ],
-              ),
-            ),
-
-          // Controls overlay (tap to toggle play/pause)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _togglePlayPause,
-              child: Container(color: Colors.transparent),
-            ),
-          ),
-
-          // Top bar with close button
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black54, Colors.transparent],
                 ),
               ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: widget.onClose ?? () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-          ),
 
-          // Bottom controls
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black54, Colors.transparent],
+              // Loading indicator
+              if (_isLoading)
+                const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Progress bar
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      trackHeight: 4,
-                    ),
-                    child: Slider(
-                      value: _duration.inSeconds > 0
-                          ? (_position.inSeconds / _duration.inSeconds).clamp(0.0, 1.0)
-                          : 0.0,
-                      onChanged: (value) {
-                        final newPosition = Duration(
-                          seconds: (value * _duration.inSeconds).round(),
-                        );
-                        _seek(newPosition);
-                      },
-                      activeColor: Colors.white,
-                      inactiveColor: Colors.white38,
-                    ),
-                  ),
 
-                  // Time display and controls
-                  Row(
+              // Error message
+              if (_error != null)
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Rewind
-                      IconButton(
-                        icon: const Icon(Icons.replay_10, color: Colors.white),
-                        onPressed: () => _seekRelative(-10),
-                      ),
-
-                      // Play/Pause
-                      IconButton(
-                        icon: Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                        onPressed: _togglePlayPause,
-                      ),
-
-                      // Fast forward
-                      IconButton(
-                        icon: const Icon(Icons.forward_10, color: Colors.white),
-                        onPressed: () => _seekRelative(10),
-                      ),
-
-                      const SizedBox(width: 8),
-
-                      // Time
+                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
                       Text(
-                        '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
+                        _error!,
                         style: const TextStyle(color: Colors.white),
-                      ),
-
-                      const Spacer(),
-
-                      // Fullscreen toggle
-                      IconButton(
-                        icon: const Icon(Icons.fullscreen, color: Colors.white),
-                        onPressed: () {
-                          _videoElement?.requestFullscreen();
-                        },
                       ),
                     ],
                   ),
-                ],
+                ),
+
+              // Controls overlay (tap to toggle play/pause and show controls)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    _showControlsTemporarily();
+                    _togglePlayPause();
+                  },
+                  child: Container(color: Colors.transparent),
+                ),
               ),
-            ),
+
+              // Top bar with close button
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedOpacity(
+                  opacity: _showControls ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.black54, Colors.transparent],
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                          onPressed: _closePlayer,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Bottom controls
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedOpacity(
+                  opacity: _showControls ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Colors.black54, Colors.transparent],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Progress bar
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                            trackHeight: 6,
+                          ),
+                          child: Slider(
+                            value: _duration.inSeconds > 0
+                                ? (_position.inSeconds / _duration.inSeconds).clamp(0.0, 1.0)
+                                : 0.0,
+                            onChanged: (value) {
+                              _showControlsTemporarily();
+                              final newPosition = Duration(
+                                seconds: (value * _duration.inSeconds).round(),
+                              );
+                              _seek(newPosition);
+                            },
+                            activeColor: Colors.white,
+                            inactiveColor: Colors.white38,
+                          ),
+                        ),
+
+                        // Time display and controls
+                        Row(
+                          children: [
+                            // Rewind
+                            IconButton(
+                              icon: const Icon(Icons.replay_10, color: Colors.white, size: 32),
+                              onPressed: () => _seekRelative(-10),
+                            ),
+
+                            // Play/Pause
+                            IconButton(
+                              icon: Icon(
+                                _isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                              onPressed: _togglePlayPause,
+                            ),
+
+                            // Fast forward
+                            IconButton(
+                              icon: const Icon(Icons.forward_10, color: Colors.white, size: 32),
+                              onPressed: () => _seekRelative(10),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            // Time
+                            Text(
+                              '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
+                              style: const TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+
+                            const Spacer(),
+
+                            // Fullscreen toggle
+                            IconButton(
+                              icon: const Icon(Icons.fullscreen, color: Colors.white, size: 32),
+                              onPressed: () {
+                                _videoElement?.requestFullscreen();
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
