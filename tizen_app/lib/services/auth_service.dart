@@ -13,7 +13,7 @@ class AuthService extends ChangeNotifier {
   String get username => 'TV User';
   String? get photoUrl => null;
   String? get email => 'tv@downstream.app';
-  String get baseUrl => 'https://api.downstream.cc';
+  String get baseUrl => 'https://downstream-server-482686216746.us-central1.run.app';
 
   Future<String?> getIdToken() async => null;
 
