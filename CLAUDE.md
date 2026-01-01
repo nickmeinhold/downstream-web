@@ -6,7 +6,8 @@ Downstream is a self-hosted web app for discovering new streaming content. Users
 
 ## Architecture
 
-- `frontend/` - Flutter Web app (WASM)
+- `webos_app/` - Flutter Web app for LG WebOS TVs
+- `tizen_app/` - Native Flutter app for Samsung Tizen TVs
 - `server/` - Dart backend using shelf
 
 ## Related Projects
@@ -42,7 +43,7 @@ See [SCHEMA.md](SCHEMA.md) for the Firestore schema shared between this project 
 Status constants are defined in:
 
 - `server/lib/src/constants.dart`
-- `frontend/lib/constants.dart`
+- `webos_app/lib/constants.dart`
 
 ## Environment Variables
 
@@ -61,8 +62,8 @@ cd server
 set -a && source .env && set +a
 dart run bin/server.dart
 
-# Frontend (separate terminal)
-cd frontend
+# WebOS app (separate terminal)
+cd webos_app
 flutter run -d chrome
 ```
 

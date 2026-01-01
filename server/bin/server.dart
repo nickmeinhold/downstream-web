@@ -10,8 +10,8 @@ void main(List<String> arguments) async {
     staticPath = arguments.first;
   } else if (Platform.environment['STATIC_PATH'] != null) {
     staticPath = Platform.environment['STATIC_PATH'];
-  } else if (await Directory('../frontend/build/web').exists()) {
-    staticPath = '../frontend/build/web';
+  } else if (await Directory('../webos_app/build/web').exists()) {
+    staticPath = '../webos_app/build/web';
   }
 
   final server = DownstreamServer(

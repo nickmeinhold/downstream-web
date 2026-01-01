@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Downstream Tizen is a native Flutter application for Samsung Tizen Smart TVs. It shares code with the WebOS/Web frontend but builds as a native app using flutter-tizen.
+Downstream Tizen is a native Flutter application for Samsung Tizen Smart TVs. It shares code with the WebOS app (`../webos_app/`) but builds as a native app using flutter-tizen.
 
 ## Architecture
 

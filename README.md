@@ -162,9 +162,9 @@ export PORT="8080"  # Default
 cd server && dart pub get && cd ..
 
 # Frontend
-cd frontend && flutter pub get && flutter build web --wasm && cd ..
+cd webos_app && flutter pub get && flutter build web && cd ..
 
-# Start server (serves frontend automatically)
+# Start server (serves webos_app automatically)
 cd server && dart run bin/server.dart
 ```
 
@@ -227,7 +227,7 @@ DELETE /api/requests/{movie|tv}/{id}
 ## Project Structure
 
 ```text
-downstream/
+downstream-web/
 ├── server/           # Dart backend
 │   ├── bin/server.dart
 │   ├── lib/src/
@@ -235,7 +235,13 @@ downstream/
 │   │   ├── services/ # API clients
 │   │   └── ...
 │   └── pubspec.yaml
-├── frontend/         # Flutter web app
+├── webos_app/        # LG WebOS TV app (Flutter Web)
+│   ├── lib/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   └── services/
+│   └── pubspec.yaml
+├── tizen_app/        # Samsung Tizen TV app (Native Flutter)
 │   ├── lib/
 │   │   ├── screens/
 │   │   ├── widgets/

@@ -107,7 +107,7 @@ tizen_app/
 
 ## Shared Code
 
-This app shares most of its code with the WebOS/Web frontend at `../frontend/`. Key differences:
+This app shares most of its code with the WebOS app at `../webos_app/`. Key differences:
 
 | Component | WebOS/Web | Tizen |
 |-----------|-----------|-------|

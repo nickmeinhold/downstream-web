@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Downstream TV is a Flutter Web application optimized for TV platforms (LG WebOS, Samsung Tizen) and regular browsers. It provides a Netflix-style interface for browsing a personal video library and requesting new content downloads.
+Downstream WebOS is a Flutter Web application optimized for LG WebOS Smart TVs. It provides a Netflix-style interface for browsing a personal video library and requesting new content downloads.
 
 ## Architecture
 
@@ -35,14 +35,13 @@ Downstream TV is a Flutter Web application optimized for TV platforms (LG WebOS,
 
 ### PlatformService (`lib/services/platform_service.dart`)
 - Detects WebOS via user agent (`webOS` or `Web0S`)
-- Detects Tizen via user agent (`Tizen` or `SMART-TV`)
 - `isTvPlatform` boolean for conditional behavior
 
 ## Build & Deploy
 
 ### Local Development
 ```bash
-cd frontend
+cd webos_app
 flutter run -d chrome
 ```
 

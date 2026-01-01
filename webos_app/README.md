@@ -1,6 +1,6 @@
-# Downstream TV
+# Downstream WebOS
 
-A Flutter Web application for browsing and streaming your personal video library on TV platforms (LG WebOS, Samsung Tizen) and web browsers.
+A Flutter Web application for browsing and streaming your personal video library on LG WebOS Smart TVs.
 
 ## Features
 
@@ -26,7 +26,7 @@ A Flutter Web application for browsing and streaming your personal video library
 ### Run in Browser
 
 ```bash
-cd frontend
+cd webos_app
 flutter run -d chrome
 ```
 
@@ -86,7 +86,7 @@ class AppConfig {
 ## Project Structure
 
 ```
-frontend/
+webos_app/
 ├── lib/
 │   ├── config.dart           # Configuration
 │   ├── main.dart             # App entry point
