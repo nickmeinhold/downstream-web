@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 /// Stub AuthService for Tizen TV - no authentication required
 /// TV platforms skip auth since popup-based flows don't work
 class AuthService extends ChangeNotifier {
+  static const _productionUrl = 'https://downstream-server-482686216746.us-central1.run.app';
+  static const _devUrl = 'http://localhost:8080';
+
   final bool _isLoading = false;
   final bool _isAuthenticated = true; // Always authenticated on TV
 
@@ -13,7 +16,9 @@ class AuthService extends ChangeNotifier {
   String get username => 'TV User';
   String? get photoUrl => null;
   String? get email => 'tv@downstream.app';
-  String get baseUrl => 'https://downstream-server-482686216746.us-central1.run.app';
+
+  // Use localhost in debug mode, Cloud Run in release
+  String get baseUrl => kDebugMode ? _devUrl : _productionUrl;
 
   Future<String?> getIdToken() async => null;
 

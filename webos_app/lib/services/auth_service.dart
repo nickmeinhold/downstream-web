@@ -21,18 +21,15 @@ class AuthService extends ChangeNotifier {
   String? get photoUrl => _isTvMode ? null : _user?.photoURL;
   String? get email => _isTvMode ? null : _user?.email;
 
+  static const _productionUrl = 'https://downstream-server-482686216746.us-central1.run.app';
+  static const _devUrl = 'http://localhost:8080';
+
   String get baseUrl {
-    // TV apps connect to Cloud Run directly
-    if (_isTvMode) {
-      return 'https://downstream-server-482686216746.us-central1.run.app';
+    // Use localhost in debug mode, Cloud Run in release
+    if (kDebugMode) {
+      return _devUrl;
     }
-    // For local development, use localhost
-    // In production web, use same origin
-    const isProduction = bool.fromEnvironment('dart.vm.product');
-    if (isProduction && kIsWeb) {
-      return ''; // Same origin in production
-    }
-    return 'http://localhost:8080';
+    return _productionUrl;
   }
 
   AuthService() : _isTvMode = PlatformService.isTvPlatform {
