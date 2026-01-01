@@ -22,8 +22,12 @@ class AuthService extends ChangeNotifier {
   String? get email => _isTvMode ? null : _user?.email;
 
   String get baseUrl {
-    // For local development, always use localhost:8080
-    // In production (Cloud Run), use same origin
+    // TV apps connect to Cloud Run directly
+    if (_isTvMode) {
+      return 'https://downstream-server-482686216746.us-central1.run.app';
+    }
+    // For local development, use localhost
+    // In production web, use same origin
     const isProduction = bool.fromEnvironment('dart.vm.product');
     if (isProduction && kIsWeb) {
       return ''; // Same origin in production
