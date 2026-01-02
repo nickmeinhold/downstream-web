@@ -548,10 +548,10 @@ class _NewReleasesTabState extends State<_NewReleasesTab> {
     final title = item['title'] ?? item['name'] ?? 'Unknown';
     try {
       await api.createRequest(
-        mediaType: item['media_type'] ?? (item['title'] != null ? 'movie' : 'tv'),
+        mediaType: item['mediaType'] ?? (item['title'] != null ? 'movie' : 'tv'),
         id: item['id'],
         title: title,
-        posterPath: item['poster_path'],
+        posterPath: item['posterPath'],
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -696,10 +696,10 @@ class _TrendingTabState extends State<_TrendingTab> {
     final title = item['title'] ?? item['name'] ?? 'Unknown';
     try {
       await api.createRequest(
-        mediaType: item['media_type'] ?? (item['title'] != null ? 'movie' : 'tv'),
+        mediaType: item['mediaType'] ?? (item['title'] != null ? 'movie' : 'tv'),
         id: item['id'],
         title: title,
-        posterPath: item['poster_path'],
+        posterPath: item['posterPath'],
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -833,10 +833,10 @@ class _SearchTabState extends State<_SearchTab> {
     final title = item['title'] ?? item['name'] ?? 'Unknown';
     try {
       await api.createRequest(
-        mediaType: item['media_type'] ?? (item['title'] != null ? 'movie' : 'tv'),
+        mediaType: item['mediaType'] ?? (item['title'] != null ? 'movie' : 'tv'),
         id: item['id'],
         title: title,
-        posterPath: item['poster_path'],
+        posterPath: item['posterPath'],
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1187,13 +1187,12 @@ class _TmdbCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final title = item['title'] ?? item['name'] ?? 'Unknown';
-    final posterPath = item['poster_path'] as String?;
-    final rating = item['vote_average'] as num?;
-    final mediaType = item['media_type'] as String?;
-    final releaseDate = item['release_date'] ?? item['first_air_date'];
-    final year = releaseDate != null && releaseDate.toString().length >= 4
-        ? releaseDate.toString().substring(0, 4)
-        : null;
+    // Server returns camelCase: posterPath, posterUrl, voteAverage, mediaType
+    final posterPath = item['posterPath'] as String?;
+    final posterUrl = item['posterUrl'] as String?;
+    final rating = item['voteAverage'] as num?;
+    final mediaType = item['mediaType'] as String?;
+    final year = item['year'] as String?;
 
     return FocusableCard(
       onSelect: onTap,
@@ -1201,9 +1200,9 @@ class _TmdbCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (posterPath != null)
+          if (posterUrl != null || posterPath != null)
             CachedNetworkImage(
-              imageUrl: 'https://image.tmdb.org/t/p/w342$posterPath',
+              imageUrl: posterUrl ?? 'https://image.tmdb.org/t/p/w342$posterPath',
               fit: BoxFit.cover,
               placeholder: (_, __) => Container(color: Colors.grey[850]),
               errorWidget: (_, __, ___) => _buildPlaceholder(title),
